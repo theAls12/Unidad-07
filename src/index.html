@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Unidad 07</title>
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="gl"></canvas>
+<canvas id="hudc"></canvas>
+
+<div id="boot"><div><b>UNIDAD 07</b>Calibrando sensor · generando texturas<div class="bar"><i></i></div></div></div>
+
+<div id="menu" hidden>
+  <div class="col">
+    <header class="brand">
+      <div class="rec" id="recTxt"><i></i>En pausa</div>
+      <h1>Unidad 07</h1>
+    </header>
+    <nav class="tabs" role="tablist" aria-label="Menú">
+      <button type="button" role="tab" data-tab="match">Partida</button>
+      <button type="button" role="tab" data-tab="op">Operador</button>
+    </nav>
+
+    <div class="body" id="mBody">
+      <!-- PARTIDA: room options (host / solo). Read-only summary in pause or when joining -->
+      <div class="view" id="vMatch" role="tabpanel">
+        <div class="stack" id="matchEdit">
+          <section class="step"><h3>Modo</h3><div class="list" id="gmList"></div></section>
+          <section class="step"><h3>Zona</h3><div class="list" id="mapList"></div></section>
+          <section class="step"><h3>Hora</h3><div class="chips" id="todList" style="--n:4"></div></section>
+          <div class="pair">
+            <section class="step"><h3>Bots</h3>
+              <div class="stepper"><button type="button" id="botsDn" aria-label="Menos bots">−</button><output id="bots">8</output><button type="button" id="botsUp" aria-label="Más bots">+</button></div>
+              <p class="note" id="botsNote"></p>
+            </section>
+            <section class="step"><h3>Interfaz</h3><div class="chips" id="hudList" style="--n:2"></div><p class="note" id="hudNote"></p></section>
+          </div>
+        </div>
+        <div class="stack" id="matchInfo" hidden>
+          <dl class="sum" id="sumList"></dl>
+          <div class="netline" id="net" hidden><span id="netTxt"></span><button class="sec sm" type="button" id="copyCode">Copiar código</button></div>
+          <p class="note" id="infoNote"></p>
+        </div>
+      </div>
+
+      <!-- OPERADOR -->
+      <div class="view" id="vOp" role="tabpanel" hidden>
+        <section class="step" id="teamRow"><h3>Equipo</h3><div class="chips" id="teamList" style="--n:2"></div></section>
+        <section class="step"><h3>Clase</h3><div class="list" id="clsList"></div></section>
+        <section class="step"><h3>Habilidad · Q</h3><div class="chips" id="abList" style="--n:2"></div></section>
+        <p class="note hot" id="nextCls" role="status"></p>
+      </div>
+    </div>
+
+    <!-- one action area: before the match = how to play + Jugar; in pause = Continuar / Salir -->
+    <footer class="act">
+      <div class="stack" id="actMenu">
+        <div class="chips seg" id="netList" style="--n:3" aria-label="Cómo jugar"></div>
+        <div class="joinbox" id="joinRow" hidden><input class="txt" id="code" maxlength="5" placeholder="Código de sala · K7Q2" autocomplete="off" aria-label="Código de sala"></div>
+        <p class="note" id="netNote" hidden><!--ONLINE_NOTE-->Tu amigo necesita acceso de edición a este artefacto y el mismo código de sala.<!--/ONLINE_NOTE--></p>
+        <button class="go" id="go" type="button"><span id="goTxt">Jugar</span><small id="goSub"></small></button>
+        <div id="err" role="status"></div>
+      </div>
+      <div class="stack" id="actPause" hidden>
+        <button class="go" id="resume" type="button"><span>Continuar</span></button>
+        <button class="sec" id="leave" type="button"><span>Salir al menú</span></button>
+        <p class="note hot" id="pauseNote" role="status"></p>
+      </div>
+    </footer>
+  </div>
+  <div class="side"></div>
+
+  <!-- top-right: your player name + settings -->
+  <div class="corner">
+    <label class="who"><span>Jugador</span><input id="nick" maxlength="12" value="AL-07" autocomplete="off" spellcheck="false" aria-label="Nombre de jugador"></label>
+    <button type="button" class="gear" id="cfgBtn" aria-label="Ajustes" aria-expanded="false"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M19.4 13a7.6 7.6 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a7.4 7.4 0 0 0-1.7-1L15 3h-4l-.4 2.9a7.4 7.4 0 0 0-1.7 1l-2.5-1-2 3.5L6.6 11a7.6 7.6 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a7.4 7.4 0 0 0 1.7 1L11 21h4l.4-2.9a7.4 7.4 0 0 0 1.7-1l2.5 1 2-3.5zM13 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z" transform="translate(-1 0)"/></svg><span>Ajustes</span></button>
+  </div>
+
+  <!-- AJUSTES drawer -->
+  <aside class="cfg" id="cfg" hidden aria-label="Ajustes">
+    <div class="cfgHead"><h2>Ajustes</h2><button type="button" class="x" id="cfgClose" aria-label="Cerrar">✕</button></div>
+    <section class="step"><h3>Calidad gráfica</h3><div class="chips" id="qList" style="--n:4"></div><p class="note" id="qNote"></p></section>
+    <section class="step"><h3>Pantalla</h3><div class="chips" style="--n:1"><button class="opt" type="button" id="fs"><span class="nm">Pantalla completa</span></button></div></section>
+    <section class="step"><h3>Controles · <span id="ctrlDev"></span></h3><div class="keys" id="keysList"></div><p class="note">Se adapta solo a lo que uses: teclado y ratón, mando o pantalla táctil.</p></section>
+  </aside>
+</div>
+
+<div id="hud" hidden>
+  <div id="mm" class="fonly"><canvas id="mini" width="352" height="352"></canvas><div id="mapLbl"></div></div>
+  <div id="tl"><span id="unit">UNIDAD 07 · AL-07</span><span id="room" hidden></span></div>
+  <div id="osd">
+    <div class="l1"><span class="rec"><i></i>REC</span><span id="clock">2026-10-14 23:47:12</span><span class="bat" aria-hidden="true"><b></b><b></b><b></b></span></div>
+    <div class="dim" id="sn">SN 4471-B · 1080P30 · GPS</div>
+    <div class="dim" id="hdg">RUMBO 000° N</div>
+  </div>
+  <div id="modeHud"></div>
+  <div id="feed" class="fonly" aria-live="polite"></div>
+  <div id="uav" class="xonly"><canvas id="uavc" width="400" height="400"></canvas><span>Dron UAV · térmica</span></div>
+  <div id="center"></div>
+  <div id="prompt" hidden></div>
+  <div id="vitals" class="fonly">
+    <div class="lbl"><span>Vida</span><b id="hpTxt">100</b></div>
+    <div class="bar" id="hpBar"><i style="width:100%"></i></div>
+    <div class="bar" id="armorBar" hidden><i style="width:0%"></i></div>
+    <div id="ability"><kbd>Q</kbd><span id="abName">—</span><div class="cd"><i id="abCd" style="width:100%"></i></div></div>
+  </div>
+  <div id="streaks" class="fonly">
+    <div class="s" id="stk10"><span>Unidad canina</span><i>10</i></div>
+    <div class="s" id="stk6"><span>Torreta</span><i>6</i></div>
+    <div class="s" id="stk3"><span>Dron UAV</span><i>3</i></div>
+    <div id="streakCount">Racha <b>0</b></div>
+  </div>
+  <div id="weapon" class="fonly"><div id="slots"><span>1</span><span>2</span><span>3</span></div><div class="wn" id="wName">—</div><div class="ammo" id="ammoBox"><b id="ammoNow">30</b><span id="ammoRes">/ 120</span></div></div>
+  <div id="kit" class="xonly">
+    <div id="kAb"></div>
+    <div id="kArmor"></div>
+    <div id="kUav"></div>
+    <div id="kTurret"></div>
+    <div id="kDogs"></div>
+  </div>
+  <div id="death" hidden><div><b>SEÑAL PERDIDA</b><span id="deathBy"></span></div></div>
+  <div class="panel" id="score" hidden><div class="box"><h3>Marcador</h3><table class="sb"><thead><tr><th>Operador</th><th class="n">Bajas</th><th class="n">Muertes</th></tr></thead><tbody id="sbBody"></tbody></table><div id="sbAdmin" hidden></div></div></div>
+  <div class="panel" id="matchEnd" hidden><div class="box"><h3 id="meTitle">VICTORIA</h3><p class="note" id="meSub"></p><div id="meScore"></div></div></div>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script src="vendor/GLTFLoader.js"></script>
+<script src="vendor/SkeletonUtils.js"></script>
+<!-- build:scripts (el build los une en un solo bloque, en este orden; 01-assets.gen.js lo genera el build) -->
+<script src="js/01-assets.gen.js"></script>
+<script src="js/02-meshopt-decoder.js"></script>
+<script src="js/10-util.js"></script>
+<script src="js/11-asset-loading.js"></script>
+<script src="js/12-textures.js"></script>
+<script src="js/13-materials.js"></script>
+<script src="js/14-renderer.js"></script>
+<script src="js/15-level-geometry.js"></script>
+<script src="js/16-collision-nav.js"></script>
+<script src="js/17-sky-weather.js"></script>
+<script src="js/18-props.js"></script>
+<script src="js/19-map-school.js"></script>
+<script src="js/20-map-forest.js"></script>
+<script src="js/21-map-desert.js"></script>
+<script src="js/22-maps.js"></script>
+<script src="js/23-weapons-data.js"></script>
+<script src="js/24-dog-turret.js"></script>
+<script src="js/25-fx.js"></script>
+<script src="js/26-gun-models.js"></script>
+<script src="js/27-arms-hands.js"></script>
+<script src="js/28-characters.js"></script>
+<script src="js/29-audio.js"></script>
+<script src="js/30-state.js"></script>
+<script src="js/31-input.js"></script>
+<script src="js/32-player.js"></script>
+<script src="js/33-combat.js"></script>
+<script src="js/34-bots.js"></script>
+<script src="js/35-equipment-streaks.js"></script>
+<script src="js/36-modes.js"></script>
+<script src="js/37-network.js"></script>
+<script src="js/38-hud.js"></script>
+<script src="js/39-menu.js"></script>
+<script src="js/40-game-flow.js"></script>
+<script src="js/41-main.js"></script>
+<!-- /build:scripts -->
+</body>
+</html>
